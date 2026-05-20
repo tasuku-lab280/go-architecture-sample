@@ -5,7 +5,6 @@ import "net/http"
 func NewMux(userHandler *UserHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /healthz", Health)
 	mux.HandleFunc("POST /users", userHandler.Register)
 
 	return mux
