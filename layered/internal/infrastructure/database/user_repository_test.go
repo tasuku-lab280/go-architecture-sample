@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain/user"
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/infrastructure/database"
 )
 
@@ -61,14 +61,14 @@ func setupRepo(t *testing.T) (*database.UserRepository, context.Context) {
 func TestUserRepository_Save(t *testing.T) {
 	repo, ctx := setupRepo(t)
 
-	user, err := domain.NewUser("save@example.com", "password123")
+	u, err := user.NewUser("save@example.com", "password123")
 	if err != nil {
 		t.Fatalf("NewUser: %v", err)
 	}
-	if err := repo.Save(ctx, user); err != nil {
+	if err := repo.Save(ctx, u); err != nil {
 		t.Fatalf("Save: %v", err)
 	}
-	if user.ID == 0 {
+	if u.ID == 0 {
 		t.Error("ID should be set after Save")
 	}
 }
@@ -77,7 +77,7 @@ func TestUserRepository_ExistsByEmail(t *testing.T) {
 	t.Run("存在しないメールアドレスはfalse", func(t *testing.T) {
 		repo, ctx := setupRepo(t)
 
-		exists, err := repo.ExistsByEmail(ctx, domain.Email("none@example.com"))
+		exists, err := repo.ExistsByEmail(ctx, user.Email("none@example.com"))
 		if err != nil {
 			t.Fatalf("ExistsByEmail: %v", err)
 		}
@@ -89,11 +89,11 @@ func TestUserRepository_ExistsByEmail(t *testing.T) {
 	t.Run("保存済みのメールアドレスはtrue", func(t *testing.T) {
 		repo, ctx := setupRepo(t)
 
-		user, _ := domain.NewUser("exists@example.com", "password123")
-		if err := repo.Save(ctx, user); err != nil {
+		u, _ := user.NewUser("exists@example.com", "password123")
+		if err := repo.Save(ctx, u); err != nil {
 			t.Fatalf("Save: %v", err)
 		}
-		exists, err := repo.ExistsByEmail(ctx, domain.Email("exists@example.com"))
+		exists, err := repo.ExistsByEmail(ctx, user.Email("exists@example.com"))
 		if err != nil {
 			t.Fatalf("ExistsByEmail: %v", err)
 		}
