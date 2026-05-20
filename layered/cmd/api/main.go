@@ -4,14 +4,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/handler"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
+	mux := handler.NewMux()
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {
