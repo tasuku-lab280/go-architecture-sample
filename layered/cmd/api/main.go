@@ -4,14 +4,24 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/handler"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/infrastructure/database"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/usecase"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
+	db, err := database.NewDB()
+	if err != nil {
+		log.Fatalf("failed to connect db: %v", err)
+	}
+	defer db.Close()
+
+	userRepo := database.NewUserRepository(db)
+	registerUser := usecase.NewRegisterUser(userRepo)
+	userHandler := handler.NewUserHandler(registerUser)
+
+	mux := handler.NewMux(userHandler)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {
