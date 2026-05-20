@@ -18,7 +18,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
 	result, err := r.db.ExecContext(ctx,
 		`INSERT INTO users (email, password_hash) VALUES (?, ?)`,
-		u.Email.String(), u.PasswordHash,
+		u.Email.String(), u.Password.Hash(),
 	)
 	if err != nil {
 		return err

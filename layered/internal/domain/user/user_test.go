@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain/user"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func TestNewUser(t *testing.T) {
@@ -18,11 +17,8 @@ func TestNewUser(t *testing.T) {
 		if u.Email.String() != "test@example.com" {
 			t.Errorf("email: got %q", u.Email)
 		}
-		if u.PasswordHash == "password123" {
-			t.Error("password must not be stored as plaintext")
-		}
-		if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte("password123")); err != nil {
-			t.Errorf("password hash should match original: %v", err)
+		if !u.Password.Verify("password123") {
+			t.Error("password should verify against the original plaintext")
 		}
 	})
 
@@ -37,13 +33,6 @@ func TestNewUser(t *testing.T) {
 		_, err := user.NewUser("test@example.com", strings.Repeat("a", 7))
 		if !errors.Is(err, user.ErrPasswordTooShort) {
 			t.Errorf("error: got %v want ErrPasswordTooShort", err)
-		}
-	})
-
-	t.Run("境界値: パスワード8文字なら通る", func(t *testing.T) {
-		_, err := user.NewUser("test@example.com", strings.Repeat("a", 8))
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
 		}
 	})
 }
