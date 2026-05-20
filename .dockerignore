@@ -1,0 +1,14 @@
+.git
+.gitignore
+
+tmp/
+bin/
+*.test
+*.out
+
+.idea/
+.vscode/
+.DS_Store
+
+Dockerfile
+compose.yaml
