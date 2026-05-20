@@ -5,27 +5,27 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain/user"
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/usecase"
 )
 
 type inMemoryUserRepository struct {
-	users  map[domain.Email]*domain.User
+	users  map[user.Email]*user.User
 	nextID int64
 }
 
 func newInMemoryUserRepository() *inMemoryUserRepository {
-	return &inMemoryUserRepository{users: map[domain.Email]*domain.User{}}
+	return &inMemoryUserRepository{users: map[user.Email]*user.User{}}
 }
 
-func (r *inMemoryUserRepository) Save(_ context.Context, u *domain.User) error {
+func (r *inMemoryUserRepository) Save(_ context.Context, u *user.User) error {
 	r.nextID++
 	u.ID = r.nextID
 	r.users[u.Email] = u
 	return nil
 }
 
-func (r *inMemoryUserRepository) ExistsByEmail(_ context.Context, email domain.Email) (bool, error) {
+func (r *inMemoryUserRepository) ExistsByEmail(_ context.Context, email user.Email) (bool, error) {
 	_, ok := r.users[email]
 	return ok, nil
 }
@@ -59,7 +59,7 @@ func TestRegisterUser_Execute(t *testing.T) {
 			t.Fatalf("setup: %v", err)
 		}
 		_, err := uc.Execute(context.Background(), in)
-		if !errors.Is(err, domain.ErrEmailAlreadyExists) {
+		if !errors.Is(err, user.ErrEmailAlreadyExists) {
 			t.Errorf("error: got %v want ErrEmailAlreadyExists", err)
 		}
 	})
@@ -72,7 +72,7 @@ func TestRegisterUser_Execute(t *testing.T) {
 			Email:    "invalid",
 			Password: "password123",
 		})
-		if !errors.Is(err, domain.ErrInvalidEmail) {
+		if !errors.Is(err, user.ErrInvalidEmail) {
 			t.Errorf("error: got %v want ErrInvalidEmail", err)
 		}
 	})

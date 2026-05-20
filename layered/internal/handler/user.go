@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain/user"
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/usecase"
 )
 
@@ -40,10 +40,10 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		switch {
-		case errors.Is(err, domain.ErrInvalidEmail),
-			errors.Is(err, domain.ErrPasswordTooShort):
+		case errors.Is(err, user.ErrInvalidEmail),
+			errors.Is(err, user.ErrPasswordTooShort):
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		case errors.Is(err, domain.ErrEmailAlreadyExists):
+		case errors.Is(err, user.ErrEmailAlreadyExists):
 			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, "internal server error", http.StatusInternalServerError)

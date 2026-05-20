@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain/user"
 )
 
 type RegisterUserInput struct {
@@ -17,33 +17,33 @@ type RegisterUserOutput struct {
 }
 
 type RegisterUser struct {
-	repo domain.UserRepository
+	repo user.Repository
 }
 
-func NewRegisterUser(repo domain.UserRepository) *RegisterUser {
+func NewRegisterUser(repo user.Repository) *RegisterUser {
 	return &RegisterUser{repo: repo}
 }
 
 func (uc *RegisterUser) Execute(ctx context.Context, in RegisterUserInput) (*RegisterUserOutput, error) {
-	user, err := domain.NewUser(in.Email, in.Password)
+	u, err := user.NewUser(in.Email, in.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	exists, err := uc.repo.ExistsByEmail(ctx, user.Email)
+	exists, err := uc.repo.ExistsByEmail(ctx, u.Email)
 	if err != nil {
 		return nil, err
 	}
 	if exists {
-		return nil, domain.ErrEmailAlreadyExists
+		return nil, user.ErrEmailAlreadyExists
 	}
 
-	if err := uc.repo.Save(ctx, user); err != nil {
+	if err := uc.repo.Save(ctx, u); err != nil {
 		return nil, err
 	}
 
 	return &RegisterUserOutput{
-		ID:    user.ID,
-		Email: user.Email.String(),
+		ID:    u.ID,
+		Email: u.Email.String(),
 	}, nil
 }

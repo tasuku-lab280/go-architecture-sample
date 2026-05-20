@@ -8,28 +8,28 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain/user"
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/handler"
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/usecase"
 )
 
 type inMemoryUserRepository struct {
-	users  map[domain.Email]*domain.User
+	users  map[user.Email]*user.User
 	nextID int64
 }
 
 func newInMemoryUserRepository() *inMemoryUserRepository {
-	return &inMemoryUserRepository{users: map[domain.Email]*domain.User{}}
+	return &inMemoryUserRepository{users: map[user.Email]*user.User{}}
 }
 
-func (r *inMemoryUserRepository) Save(_ context.Context, u *domain.User) error {
+func (r *inMemoryUserRepository) Save(_ context.Context, u *user.User) error {
 	r.nextID++
 	u.ID = r.nextID
 	r.users[u.Email] = u
 	return nil
 }
 
-func (r *inMemoryUserRepository) ExistsByEmail(_ context.Context, email domain.Email) (bool, error) {
+func (r *inMemoryUserRepository) ExistsByEmail(_ context.Context, email user.Email) (bool, error) {
 	_, ok := r.users[email]
 	return ok, nil
 }
