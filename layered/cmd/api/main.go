@@ -6,18 +6,18 @@ import (
 	"os"
 
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/handler"
-	"github.com/kudoutasuku/go-architecture-sample/layered/internal/infrastructure"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/infrastructure/database"
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/usecase"
 )
 
 func main() {
-	db, err := infrastructure.NewDB()
+	db, err := database.NewDB()
 	if err != nil {
 		log.Fatalf("failed to connect db: %v", err)
 	}
 	defer db.Close()
 
-	userRepo := infrastructure.NewUserRepository(db)
+	userRepo := database.NewUserRepository(db)
 	registerUser := usecase.NewRegisterUser(userRepo)
 	userHandler := handler.NewUserHandler(registerUser)
 

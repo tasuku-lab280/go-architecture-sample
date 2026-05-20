@@ -1,4 +1,4 @@
-package infrastructure_test
+package database_test
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain"
-	"github.com/kudoutasuku/go-architecture-sample/layered/internal/infrastructure"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/infrastructure/database"
 )
 
 var testDB *sql.DB
@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	setDefaultEnv("DB_PASSWORD", "password")
 	setDefaultEnv("DB_NAME", "app_db")
 
-	if db, err := infrastructure.NewDB(); err == nil {
+	if db, err := database.NewDB(); err == nil {
 		testDB = db
 		defer testDB.Close()
 		if err := ensureSchema(testDB); err != nil {
@@ -38,7 +38,7 @@ func setDefaultEnv(key, val string) {
 }
 
 func ensureSchema(db *sql.DB) error {
-	schema, err := os.ReadFile("../../db/init/001_create_users.sql")
+	schema, err := os.ReadFile("../../../db/init/001_create_users.sql")
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func ensureSchema(db *sql.DB) error {
 	return err
 }
 
-func setupRepo(t *testing.T) (*infrastructure.UserRepository, context.Context) {
+func setupRepo(t *testing.T) (*database.UserRepository, context.Context) {
 	t.Helper()
 	if testDB == nil {
 		t.Skip("DB not available; start docker compose to run this test")
@@ -55,7 +55,7 @@ func setupRepo(t *testing.T) (*infrastructure.UserRepository, context.Context) {
 	if _, err := testDB.ExecContext(ctx, "TRUNCATE TABLE users"); err != nil {
 		t.Fatalf("truncate: %v", err)
 	}
-	return infrastructure.NewUserRepository(testDB), ctx
+	return database.NewUserRepository(testDB), ctx
 }
 
 func TestUserRepository_Save(t *testing.T) {
