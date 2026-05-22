@@ -2,22 +2,23 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
 
-	"github.com/kudoutasuku/go-architecture-sample/layered/internal/domain/user"
+	"github.com/kudoutasuku/go-architecture-sample/layered/internal/cli"
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/infrastructure/database"
 	"github.com/kudoutasuku/go-architecture-sample/layered/internal/usecase"
 )
 
-// Layered 版 CLI。
+// Layered 版 CLI のエントリポイント。
 //
-// 注目ポイント: ユースケース呼び出しは Handler と同じだが、
-// 「エラー → 終了コード」「成功 → 標準出力フォーマット」の翻訳ロジックを
-// ここで再実装している。handler/user.go の Register と見比べると、
-// エラー判定の switch がほぼコピペ構造になっていることが分かる。
+// main の責務は DI 組み立てのみ。
+// 「エラー → 終了コード」「成功 → 標準出力フォーマット」の翻訳は
+// internal/cli/user_cli.go に閉じている。
+//
+// internal/cli/user_cli.go と internal/handler/user.go を見比べると、
+// エラー分類の switch がほぼ同じ形でコピペ的に重複している。
 func main() {
 	email := flag.String("email", "", "user email")
 	password := flag.String("password", "", "user password")
@@ -37,26 +38,8 @@ func main() {
 
 	userRepo := database.NewUserRepository(db)
 	registerUser := usecase.NewRegisterUser(userRepo)
+	userCLI := cli.NewUserCLI(registerUser)
 
-	out, err := registerUser.Execute(context.Background(), usecase.RegisterUserInput{
-		Email:    *email,
-		Password: *password,
-	})
-	if err != nil {
-		// ↓ HTTP Handler の switch とそっくり同じ判定を、出口が違うだけで書き直している
-		switch {
-		case errors.Is(err, user.ErrInvalidEmail),
-			errors.Is(err, user.ErrPasswordTooShort):
-			fmt.Fprintf(os.Stderr, "invalid input: %v\n", err)
-			os.Exit(2)
-		case errors.Is(err, user.ErrEmailAlreadyExists):
-			fmt.Fprintf(os.Stderr, "conflict: %v\n", err)
-			os.Exit(3)
-		default:
-			fmt.Fprintf(os.Stderr, "internal error: %v\n", err)
-			os.Exit(1)
-		}
-	}
-
-	fmt.Printf("created user id=%d email=%s\n", out.ID, out.Email)
+	code := userCLI.Register(context.Background(), *email, *password, os.Stdout, os.Stderr)
+	os.Exit(code)
 }
