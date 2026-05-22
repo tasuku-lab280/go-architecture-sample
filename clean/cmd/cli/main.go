@@ -6,21 +6,23 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kudoutasuku/go-architecture-sample/clean/internal/adapter/controller"
 	"github.com/kudoutasuku/go-architecture-sample/clean/internal/adapter/gateway"
-	"github.com/kudoutasuku/go-architecture-sample/clean/internal/adapter/presenter"
 	"github.com/kudoutasuku/go-architecture-sample/clean/internal/infrastructure/database"
 	"github.com/kudoutasuku/go-architecture-sample/clean/internal/usecase/interactor"
 	"github.com/kudoutasuku/go-architecture-sample/clean/internal/usecase/port/input"
+	"github.com/kudoutasuku/go-architecture-sample/clean/internal/usecase/port/output"
 )
 
-// Clean 版 CLI。
+// Clean 版 CLI のエントリポイント。
 //
-// 注目ポイント:
-//   - interactor.NewRegisterUserInteractor は HTTP 版 main.go と完全に同じ呼び出し
-//   - 違うのは Presenter だけ（NewCLIRegisterUserPresenter）
-//   - エラー → 終了コードの switch は Presenter 内に閉じている（このファイルには無い）
+// main の責務は DI 組み立てのみ:
+//   - DB / Gateway / Interactor ファクトリの結線
+//   - flag の解析（ここは外界との境界なので main に置く）
+//   - CLIUserController に処理を委譲
 //
-// 「ユースケースは触らない」「翻訳器（Presenter）を差し替えるだけ」が体感できる。
+// HTTP 版 cmd/api/main.go と比較すると、registerUserFactory までは
+// 完全に同じ。違いは「どの Controller に渡すか」だけ。
 func main() {
 	email := flag.String("email", "", "user email")
 	password := flag.String("password", "", "user password")
@@ -40,14 +42,11 @@ func main() {
 
 	userRepo := gateway.NewUserRepository(db)
 
-	p := presenter.NewCLIRegisterUserPresenter()
-	uc := interactor.NewRegisterUserInteractor(userRepo, p)
+	registerUserFactory := func(p output.RegisterUserPresenter) input.RegisterUserInputPort {
+		return interactor.NewRegisterUserInteractor(userRepo, p)
+	}
 
-	_ = uc.Handle(context.Background(), input.RegisterUserInputData{
-		Email:    *email,
-		Password: *password,
-	})
-
-	p.WriteTo(os.Stdout, os.Stderr)
-	os.Exit(p.ViewModel.ExitCode)
+	cliController := controller.NewCLIUserController(registerUserFactory)
+	code := cliController.Register(context.Background(), *email, *password, os.Stdout, os.Stderr)
+	os.Exit(code)
 }
